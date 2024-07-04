@@ -2,7 +2,7 @@ import hashlib
 import pandas as pd
 import pytest
 
-from src.data_anon import anonymize_data
+from src.data_anon import ColumnNotFoundException, anonymize_data
 
 def hash_string(original_list):
     return [hashlib.sha256(value.encode()).hexdigest() for value in original_list]
@@ -74,5 +74,24 @@ test_cases = [
 
 @pytest.mark.parametrize("case", test_cases)
 def test_data_anon(case):
-    data_actual_anonimized = anonymize_data(case['given']['data'],case['given']['anonymize'])
-    assert case['expect'].equals(data_actual_anonimized), 'The anonymized data does not match the expected values'
+    data_actual = anonymize_data(case['given']['data'],case['given']['anonymize'])
+    assert case['expect'].equals(data_actual), 'The anonymized data does not match the expected values'
+
+def test_data_anon_handles_missing_column_exception():
+    anonymize = ['name', 'email', 'salary']
+    data_given = pd.DataFrame({
+                'name': ['Alice Smith','Bob Johnson'],
+                'email': ['alice.smith@company.com','bob.johnson@company.com'],
+                'age': [28,35],
+            })
+    expected = pd.DataFrame({
+            'name': hash_string(['Alice Smith','Bob Johnson']),
+            'email': hash_string(['alice.smith@company.com','bob.johnson@company.com']),
+            'age': [28,35],
+        })
+
+    with pytest.raises(ColumnNotFoundException) as excinfo:
+        actual = anonymize_data(data_given, anonymize)
+        
+        assert str(excinfo.value) == "One or more columns set for anonymization do not exist"
+        assert expected.equals(actual)
