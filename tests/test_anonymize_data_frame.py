@@ -2,7 +2,7 @@ import hashlib
 import pandas as pd
 import pytest
 
-from src.data_anon import ColumnNotFoundException, anonymize_data
+from src.anonymize_data_frame import ColumnNotFoundException, anonymize_data_frame
 
 def hash_string(original_list):
     return [hashlib.sha256(value.encode()).hexdigest() for value in original_list]
@@ -73,11 +73,11 @@ test_cases = [
 ]
 
 @pytest.mark.parametrize("case", test_cases)
-def test_data_anon(case):
-    data_actual = anonymize_data(case['given']['data'],case['given']['anonymize'])
+def test_anonymize_data_frame(case):
+    data_actual = anonymize_data_frame(case['given']['data'],case['given']['anonymize'])
     assert case['expect'].equals(data_actual), 'The anonymized data does not match the expected values'
 
-def test_data_anon_handles_missing_column_exception():
+def test_anonymize_data_frame_handles_missing_column_exception():
     anonymize = ['name', 'email', 'salary']
     data_given = pd.DataFrame({
                 'name': ['Alice Smith','Bob Johnson'],
@@ -91,7 +91,7 @@ def test_data_anon_handles_missing_column_exception():
         })
 
     with pytest.raises(ColumnNotFoundException) as excinfo:
-        actual = anonymize_data(data_given, anonymize)
+        actual = anonymize_data_frame(data_given, anonymize)
         
         assert str(excinfo.value) == "One or more columns set for anonymization do not exist"
         assert expected.equals(actual)
