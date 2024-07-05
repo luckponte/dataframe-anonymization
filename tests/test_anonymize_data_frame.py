@@ -69,3 +69,17 @@ def test_anonymize_data_frame_handles_missing_column_exception():
     with pytest.raises(ColumnNotFoundException) as excinfo:
         anonymize_data_frame(df_given, anonymize)
     assert str(excinfo.value) == "One or more columns set for anonymization do not exist"
+
+def test_anonymize_data_frame_keeps_fields_aggregatable():
+    anonymize = ['client_name','quotation']
+    df_given = pd.DataFrame({
+            'client_name': ['John Doe', 'Jane Smith', 'John Doe', 'Alice Johnson', 'Bob Brown'],
+            'quotation': [100.50, 200.75, 150.25, 300.00, 250.40]
+        })
+    
+    df_actual = anonymize_data_frame(df_given, anonymize)
+
+    for column in anonymize:
+        assert df_actual[column][0] != df_actual[column][1] and \
+            df_actual[column][0] != df_actual[column][3], f'All {column} fields have the same value'
+        df_actual[column][0] == df_actual[column][2], f'{column} fields with the same input should yeald the same result'
