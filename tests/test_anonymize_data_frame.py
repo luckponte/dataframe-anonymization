@@ -23,6 +23,15 @@ test_cases = [
     },
     {
         "data": pd.DataFrame({
+            'name': ['John Doe','Alice Smith','Bob Johnson'],
+            'email': ['john.doe@company.com', 'alice.smith@company.com','bob.johnson@company.com'],
+            'age': [41,28,35],
+            'employee_id': [0,12345,67890]
+        }),
+        "anonymize": ['employee_id','name','email']
+    },
+    {
+        "data": pd.DataFrame({
             'name': ['Alice Smith','Bob Johnson'],
             'email': ['alice.smith@company.com','bob.johnson@company.com'],
             'age': [28,35],
@@ -41,22 +50,22 @@ test_cases = [
 
 @pytest.mark.parametrize("case", test_cases)
 def test_anonymize_data_frame(case):
-    data_actual = anonymize_data_frame(case['data'],case['anonymize'])
+    df_actual = anonymize_data_frame(case['data'],case['anonymize'])
     
     for anonymized_column in case['anonymize']:
-        assert not data_actual[anonymized_column].equals(case['data'][anonymized_column]), f'The data was not anonymized at column: {anonymized_column}.\n Given: {case['data'][column]}\nGot: {data_actual[column]}'
+        assert not(case['data'][anonymized_column] == df_actual[anonymized_column]).any(), f'The data was not anonymized at column: {anonymized_column}.\n Given:\n{case['data'][anonymized_column]}\nGot:\n{df_actual[anonymized_column]}'
     
     for column in set(case['data'].columns) - set(case['anonymize']):
-        assert data_actual[column].equals(case['data'][column]), f'The data was at column: {column}.\n Given: {case['data'][column]}\nGot: {data_actual[column]}'
+        assert (df_actual[column] == (case['data'][column])).all(), f'The data was at column: {column}.\n Given:\n{case['data'][column]}\nGot:\n{df_actual[column]}'
 
 def test_anonymize_data_frame_handles_missing_column_exception():
     anonymize = ['name', 'email', 'salary']
-    data_given = pd.DataFrame({
+    df_given = pd.DataFrame({
                 'name': ['Alice Smith','Bob Johnson'],
                 'email': ['alice.smith@company.com','bob.johnson@company.com'],
                 'age': [28,35],
             })
 
     with pytest.raises(ColumnNotFoundException) as excinfo:
-        anonymize_data_frame(data_given, anonymize)
+        anonymize_data_frame(df_given, anonymize)
     assert str(excinfo.value) == "One or more columns set for anonymization do not exist"

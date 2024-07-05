@@ -5,10 +5,12 @@ from pandas import DataFrame
 class ColumnNotFoundException(Exception):    
     pass
 
+FACTOR = 1.4
+
 def _anonymize(value):
     if isinstance(value,str):
         return hashlib.sha256(value.encode()).hexdigest()
-    return 0
+    return 1 + value * FACTOR
 
 def anonymize_data_frame(df_identifiable: DataFrame, anonymize_columns: list) -> DataFrame:
     df_anonymized = df_identifiable.copy()
